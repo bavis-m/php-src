@@ -255,6 +255,7 @@ void php_mysqli_close(MY_MYSQL * mysql, int close_type, int resource_status)
 					MyG(num_inactive_persistent)++;
 				}
 				MyG(num_active_persistent)--;
+				fprintf(stderr, "NAP-- php_mysqli_close\n");
 			}
 		}
 		mysql->persistent = false;

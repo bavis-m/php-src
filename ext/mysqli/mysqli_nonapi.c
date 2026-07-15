@@ -58,7 +58,6 @@ void mysqli_common_connect(INTERNAL_FUNCTION_PARAMETERS, bool is_real_connect, b
 	zend_long			port = 0, flags = 0;
 	bool           port_is_null = 1;
 	zend_string			*hash_key = NULL;
-	bool			new_connection = false;
 	zend_resource		*le;
 	mysqli_plist_entry *plist = NULL;
 	bool			self_alloced = 0;
@@ -132,6 +131,7 @@ void mysqli_common_connect(INTERNAL_FUNCTION_PARAMETERS, bool is_real_connect, b
 	if (mysql->mysql && mysqli_resource &&
 		(mysqli_resource->status > MYSQLI_STATUS_INITIALIZED))
 	{
+		fprintf(stderr, "connect close\n");
 		/* already connected, we should close the connection */
 		php_mysqli_close(mysql, MYSQLI_CLOSE_IMPLICIT, mysqli_resource->status);
 	}
@@ -173,7 +173,6 @@ void mysqli_common_connect(INTERNAL_FUNCTION_PARAMETERS, bool is_real_connect, b
 							if (!mysql_ping(mysql->mysql)) {
 #endif
 								mysqlnd_restart_psession(mysql->mysql);
-								MyG(num_active_persistent)++;
 
 								/* clear error */
 								php_mysqli_set_error(mysql_errno(mysql->mysql), (char *) mysql_error(mysql->mysql));
@@ -221,7 +220,6 @@ void mysqli_common_connect(INTERNAL_FUNCTION_PARAMETERS, bool is_real_connect, b
 		if (!(mysql->mysql = mysqlnd_init(MYSQLND_CLIENT_NO_FLAG, persistent))) {
 			goto err;
 		}
-		new_connection = true;
 	}
 
 	if (ssl) {
@@ -281,8 +279,9 @@ end:
 	mysqli_resource->status = MYSQLI_STATUS_VALID;
 
 	/* store persistent connection */
-	if (persistent && (new_connection || is_real_connect)) {
+	if (persistent) {
 		MyG(num_active_persistent)++;
+		fprintf(stderr, "NAP++ mysqli_common_connect\n");
 	}
 
 	MyG(num_links)++;
